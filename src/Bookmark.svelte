@@ -1,12 +1,14 @@
 <script lang="ts">
   import { X } from "lucide-svelte";
   import { onMount } from "svelte";
+
   let { bookmark, onDeleteBookmark, onEditBookmark, index } = $props<{
     bookmark: Bookmark;
     onDeleteBookmark: (id: number) => void;
     onEditBookmark: (id: number, title: string, url: string) => void;
     index: number;
   }>();
+
   type Bookmark = {
     id: number;
     title: string;
@@ -29,7 +31,7 @@
   let editingState = $state<"none" | "title" | "url">("none");
   let editableTitle = $state(bookmark.title);
   let editableUrl = $state(bookmark.url);
-  let isUrlHovered = $state(false); // New state for URL hover
+  let isUrlHovered = $state(false);
 
   function handleMouseEnter() {
     isHovered = true;
@@ -86,8 +88,7 @@
   });
 
   function displayUrlOnHover(url: string) {
-    let displayUrl = url.replace(/^(https?:\/\/)?(www\.)?/, "");
-    return displayUrl;
+    return url.replace(/^(https?:\/\/)?(www\.)?/, "");
   }
 </script>
 
@@ -124,37 +125,50 @@
         class="font-geist max-w-1/2 truncate font-medium {!isOptionHeld
           ? 'hover:text-[#e11d48]'
           : 'cursor-text'}"
-        style="max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+        style="max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
         onclick={enterTitleEditMode}>{bookmark.title}</a>
+
       <div
         role="button"
         tabindex="0"
         class="font-jetbrains-mono text-sm text-gray-400"
         onclick={enterUrlEditMode}
         onkeydown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            enterUrlEditMode(e);
-          }
+          if (e.key === "Enter" || e.key === " ") enterUrlEditMode(e);
         }}
         onmouseenter={() => (isUrlHovered = true)}
         onmouseleave={() => (isUrlHovered = false)}>
         <span
           class="max-w-1/2 overflow-hidden text-ellipsis whitespace-nowrap"
-          style="max-width: 50%;">
+          style="max-width:50%;">
           {isUrlHovered ? displayUrlOnHover(bookmark.url) : formattedUrl}
         </span>
       </div>
+
       <X
         size={16}
         class="ml-auto cursor-pointer text-red-500 transition-opacity duration-200 hover:text-red-800"
         strokeWidth={2.25}
-        style="opacity: {isHovered && isOptionHeld
+        style="opacity:{isHovered && isOptionHeld
           ? 1
-          : 0}; pointer-events: {isHovered && isOptionHeld ? 'auto' : 'none'}"
+          : 0};pointer-events:{isHovered && isOptionHeld ? 'auto' : 'none'}"
         onclick={() => onDeleteBookmark(bookmark.id)} />
-      <p class="font-jetbrains-mono text-sm text-gray-400">
-        {formattedDate}
-      </p>
+
+      <p class="font-jetbrains-mono text-sm text-gray-400">{formattedDate}</p>
+    {/if}
+  </div>
+
+  <div
+    class={`flex w-full items-center gap-2 transition-all ${
+      isHovered && isOptionHeld && bookmark.tags.length > 0 ? "h-8" : "h-0"
+    }`}>
+    {#if bookmark.tags.length > 0 && isHovered && isOptionHeld}
+      {#each bookmark.tags as tag}
+        <div
+          class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit rounded-sm bg-[#FFEEED] px-2 py-1 text-xs font-medium text-[#FF574B]">
+          {tag.toUpperCase()}
+        </div>
+      {/each}
     {/if}
   </div>
 </div>
