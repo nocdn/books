@@ -2,9 +2,10 @@
   import { Plus } from "lucide-svelte";
   import Bookmark from "./Bookmark.svelte";
   import Spinner from "./lib/Spinner.svelte";
-  let { bookmarks, onCreateBookmark } = $props<{
+  let { bookmarks, onCreateBookmark, onDeleteBookmark } = $props<{
     bookmarks: BookmarkType[];
     onCreateBookmark: (bookmark: BookmarkType) => void;
+    onDeleteBookmark: (id: number) => void;
   }>();
   type BookmarkType = {
     id: number;
@@ -19,13 +20,23 @@
   let isLoading = $state(false);
   let inputSending = $state(false);
 
+  const tags = $derived(
+    input.match(/#([\w-]+)/g)?.map((t) => t.substring(1)) ?? [],
+  );
+  const url = $derived(input.replace(/#([\w-]+)/g, "").trim());
+
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       onCreateBookmark({
-        url: input,
+        url: url,
+        tags: tags,
+        createdAt: new Date().toLocaleString("en-GB", {
+          timeZone: "Europe/London",
+        }),
       });
       isLoading = true;
       inputSending = true;
+      input = "";
       setTimeout(() => {
         isLoading = false;
         inputSending = false;
@@ -51,7 +62,7 @@
     <div
       role="button"
       tabindex="0"
-      class="mr-0.5 grid h-5 w-5 cursor-pointer place-items-center"
+      class="mr-0.5 grid h-5 w-5 cursor-pointer place-items-center opacity-60 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
       onmousedown={handleFileUpload}>
       {#if isLoading}
         <Spinner size={22} />
@@ -69,13 +80,28 @@
       onkeydown={handleKeydown} />
   </div>
   <div
+    class="flex h-0 items-center gap-2 transition-all duration-200 {tags.length >
+    0
+      ? 'h-6'
+      : 'h-0'}">
+    {#each tags as tag}
+      <p
+        class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 rounded-sm bg-[#EAF8EF] px-1.5 py-0.5 text-[15px] font-medium text-[#00C460]">
+        {tag}
+      </p>
+    {/each}
+  </div>
+  <div
     class="font-geist-mono flex items-center justify-between border-b border-gray-200 py-3 text-sm text-gray-400">
     <p class="font-medium">TITLE</p>
     <p>CREATED AT</p>
   </div>
-  <div class="flex flex-col gap-2">
-    {#each bookmarks as bookmark}
-      <Bookmark bookmark={bookmark} />
+  <div class="flex flex-col gap-3">
+    {#each bookmarks as bookmark, index}
+      <Bookmark
+        bookmark={bookmark}
+        onDeleteBookmark={onDeleteBookmark}
+        index={index} />
     {/each}
   </div>
 </main>

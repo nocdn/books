@@ -14,36 +14,52 @@
     createdAt: string;
   };
 
-  let bookmarks = $state<Bookmark[]>([
-    {
-      id: 1,
-      title: "Google",
-      url: "https://www.google.com",
-      tags: ["search", "web"],
-      favicon: "https://www.google.com/s2/favicons?domain=google.com&sz=128",
-      createdAt: "2025-07-11T20:14:00+01:00",
-    },
-  ]);
+  let bookmarks = $state<Bookmark[]>([]);
 
-  const secondBookmark = {
-    id: 2,
-    title: "Svelte",
-    url: "https://svelte.dev",
-    tags: ["framework", "web"],
-    favicon: "https://www.google.com/s2/favicons?domain=svelte.dev&sz=128",
-    createdAt: "2025-07-10T10:00:00+01:00",
+  async function fetchBookmarks() {
+    const response = await fetch("http://localhost:5570/api/list");
+    const data = await response.json();
+    console.log("fetched bookmark", data);
+    bookmarks = data.bookmarks;
+  }
+
+  fetchBookmarks();
+
+  async function deleteBookmark(id: number) {
+    const response = await fetch(`http://localhost:5570/api/delete/${id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    console.log(data);
+    fetchBookmarks();
+  }
+
+  type submittedBookmark = {
+    url: string;
+    tags: string[];
+    createdAt: string;
   };
 
-  setTimeout(() => {
-    bookmarks = [...bookmarks, secondBookmark];
-  }, 1000);
-
-  async function handleCreateBookmark(bookmark: Bookmark) {}
+  async function handleCreateBookmark(bookmark: submittedBookmark) {
+    const response = await fetch("http://localhost:5570/api/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(bookmark),
+    });
+    const data = await response.json();
+    console.log(data);
+    fetchBookmarks();
+  }
 </script>
 
 <main>
   <Navbar onGroupChange={handleGroupChange} />
   <div class="mt-24 grid w-full place-items-center">
-    <Bookmarks bookmarks={bookmarks} onCreateBookmark={handleCreateBookmark} />
+    <Bookmarks
+      bookmarks={bookmarks}
+      onCreateBookmark={handleCreateBookmark}
+      onDeleteBookmark={deleteBookmark} />
   </div>
 </main>
