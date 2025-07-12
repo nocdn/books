@@ -20,7 +20,7 @@
     <select
       name="groups"
       id="groups"
-      class="flex cursor-pointer appearance-none items-center gap-2 border-none bg-transparent outline-none"
+      class="flex cursor-pointer appearance-none items-center gap-2 border-none bg-transparent opacity-90 outline-none"
       onchange={(e) => onGroupChange((e.target as HTMLSelectElement).value)}>
       <option value="main">main</option>
       <option value="work">work</option>

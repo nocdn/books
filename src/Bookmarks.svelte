@@ -21,6 +21,7 @@
   let input = $state("");
   let isLoading = $state(false);
   let inputSending = $state(false);
+  let inputElement: HTMLInputElement;
 
   const tags = $derived(
     input.match(/#([\w-]+)/g)?.map((t) => t.substring(1)) ?? [],
@@ -56,6 +57,25 @@
     };
     input.click();
   }
+
+  $effect(() => {
+    const handleGlobalKeydown = (event: KeyboardEvent) => {
+      if (event.key === "/" && inputElement) {
+        if (event.target !== inputElement) {
+          event.preventDefault();
+          inputElement.focus();
+        }
+      } else if (event.key === "Escape" && inputElement) {
+        inputElement.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeydown);
+
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeydown);
+    };
+  });
 </script>
 
 <main class="flex w-3xl flex-col gap-4">
@@ -64,7 +84,7 @@
     <div
       role="button"
       tabindex="0"
-      class="mr-0.5 grid h-5 w-5 cursor-pointer place-items-center opacity-60 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+      class="mr-0.5 grid h-5 w-5 cursor-pointer place-items-center opacity-50 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
       onmousedown={handleFileUpload}>
       {#if isLoading}
         <Spinner size={22} />
@@ -79,7 +99,8 @@
         ? 'motion-opacity-out-0 motion-duration-100'
         : ''}"
       bind:value={input}
-      onkeydown={handleKeydown} />
+      onkeydown={handleKeydown}
+      bind:this={inputElement} />
   </div>
   <div
     class="flex h-0 items-center gap-2 transition-all duration-200 {tags.length >
