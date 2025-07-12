@@ -18,13 +18,16 @@
     createdAt: string;
   };
 
-  const date = new Date(bookmark.createdAt);
-  const formattedDate = date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const formattedDate = $derived(
+    new Date(bookmark.createdAt).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+    }),
+  );
 
-  const formattedUrl = new URL(bookmark.url).hostname.replace("www.", "") + "/";
+  const formattedUrl = $derived(
+    new URL(bookmark.url).hostname.replace("www.", "") + "/",
+  );
 
   let isHovered = $state(false);
   let isOptionHeld = $state(false);

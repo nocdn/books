@@ -76,6 +76,18 @@
       window.removeEventListener("keydown", handleGlobalKeydown);
     };
   });
+
+  let filteredBookmarks = $derived(
+    bookmarks.filter(
+      (bookmark: BookmarkType) =>
+        bookmark.title.toLowerCase().includes(input.toLowerCase()) ||
+        bookmark.tags.some((tag) =>
+          tag.toLowerCase().includes(input.toLowerCase()),
+        ) ||
+        bookmark.url.toLowerCase().includes(input.toLowerCase()) ||
+        bookmark.createdAt.toLowerCase().includes(input.toLowerCase()),
+    ),
+  );
 </script>
 
 <main class="flex w-3xl flex-col gap-4">
@@ -120,7 +132,7 @@
     <p>CREATED AT</p>
   </div>
   <div class="flex flex-col gap-3">
-    {#each bookmarks as bookmark, index}
+    {#each filteredBookmarks as bookmark, index (bookmark.id)}
       <Bookmark
         bookmark={bookmark}
         onDeleteBookmark={onDeleteBookmark}
