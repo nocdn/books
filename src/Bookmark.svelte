@@ -126,7 +126,7 @@
       <a
         href={bookmark.url}
         class="font-geist max-w-1/2 truncate font-medium {!isOptionHeld
-          ? 'hover:text-[#e11d48]'
+          ? 'hover:text-[#c11a3f]'
           : 'cursor-text'}"
         style="max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
         onclick={enterTitleEditMode}>{bookmark.title}</a>
