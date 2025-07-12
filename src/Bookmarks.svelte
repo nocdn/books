@@ -30,8 +30,12 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      let submittedUrl = url;
+      if (!/^https?:\/\//i.test(submittedUrl)) {
+        submittedUrl = `https://${submittedUrl}`;
+      }
       onCreateBookmark({
-        url: url,
+        url: submittedUrl,
         tags: tags,
         createdAt: new Date().toLocaleString("en-GB", {
           timeZone: "Europe/London",
@@ -61,7 +65,8 @@
   $effect(() => {
     const handleGlobalKeydown = (event: KeyboardEvent) => {
       if (event.key === "/" && inputElement) {
-        if (event.target !== inputElement) {
+        const target = event.target as HTMLElement;
+        if (target.tagName !== "INPUT") {
           event.preventDefault();
           inputElement.focus();
         }

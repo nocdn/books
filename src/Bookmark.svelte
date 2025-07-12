@@ -91,7 +91,16 @@
   });
 
   function displayUrlOnHover(url: string) {
-    return url.replace(/^(https?:\/\/)?(www\.)?/, "");
+    const cleanUrl = url.replace(/^(https?:\/\/)?(www\.)?/, "");
+    try {
+      const urlObject = new URL(url);
+      if (urlObject.pathname === "/" && !cleanUrl.endsWith("/")) {
+        return `${cleanUrl}/`;
+      }
+    } catch (e) {
+      // Invalid URL, return cleaned string as is
+    }
+    return cleanUrl;
   }
 </script>
 
