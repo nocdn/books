@@ -1,9 +1,11 @@
 <script lang="ts">
   import { X } from "lucide-svelte";
   import { onMount } from "svelte";
-  let { bookmark, onDeleteBookmark, index } = $props<{
+  let { bookmark, onDeleteBookmark, onEditTitle, onEditUrl, index } = $props<{
     bookmark: Bookmark;
     onDeleteBookmark: (id: number) => void;
+    onEditTitle: (id: number, title: string) => void;
+    onEditUrl: (id: number, url: string) => void;
     index: number;
   }>();
   type Bookmark = {
@@ -21,10 +23,7 @@
     day: "numeric",
   });
 
-  const formattedUrl = bookmark.url
-    .replace("https://", "")
-    .replace("http://", "")
-    .replace("www.", "");
+  const formattedUrl = new URL(bookmark.url).hostname.replace("www.", "") + "/";
 
   let isHovered = $state(false);
   let isOptionHeld = $state(false);
@@ -65,7 +64,11 @@
   onmouseenter={handleMouseEnter}
   onmouseleave={handleMouseLeave}>
   <img src={bookmark.favicon} alt={bookmark.title} class="h-4 w-4" />
-  <a href={bookmark.url} class="font-geist font-medium">{bookmark.title}</a>
+  <a
+    href={bookmark.url}
+    class="font-geist max-w-1/2 truncate font-medium"
+    style="max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+    >{bookmark.title}</a>
   <p class="font-jetbrains-mono text-sm text-gray-400">
     {formattedUrl}
   </p>
