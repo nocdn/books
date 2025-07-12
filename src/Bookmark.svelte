@@ -29,6 +29,7 @@
   let editingState = $state<"none" | "title" | "url">("none");
   let editableTitle = $state(bookmark.title);
   let editableUrl = $state(bookmark.url);
+  let isUrlHovered = $state(false); // New state for URL hover
 
   function handleMouseEnter() {
     isHovered = true;
@@ -83,6 +84,14 @@
       window.removeEventListener("keyup", handleKeyUp);
     };
   });
+
+  function displayUrlOnHover(url: string) {
+    let displayUrl = url.replace(/^(https?:\/\/)?(www\.)?/, "");
+    // if (displayUrl.endsWith("/")) {
+    //   displayUrl = displayUrl.slice(0, -1);
+    // }
+    return displayUrl;
+  }
 </script>
 
 <div
@@ -128,8 +137,14 @@
         if (e.key === "Enter" || e.key === " ") {
           enterUrlEditMode(e);
         }
-      }}>
-      {formattedUrl}
+      }}
+      onmouseenter={() => (isUrlHovered = true)}
+      onmouseleave={() => (isUrlHovered = false)}>
+      <span
+        class="max-w-1/2 overflow-hidden text-ellipsis whitespace-nowrap"
+        style="max-width: 50%;">
+        {isUrlHovered ? displayUrlOnHover(bookmark.url) : formattedUrl}
+      </span>
     </div>
     <X
       size={16}
