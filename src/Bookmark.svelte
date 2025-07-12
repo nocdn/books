@@ -87,75 +87,74 @@
 
   function displayUrlOnHover(url: string) {
     let displayUrl = url.replace(/^(https?:\/\/)?(www\.)?/, "");
-    // if (displayUrl.endsWith("/")) {
-    //   displayUrl = displayUrl.slice(0, -1);
-    // }
     return displayUrl;
   }
 </script>
 
-<div
-  role="button"
-  tabindex="0"
-  class="motion-opacity-in-0 motion-duration-200 flex items-center gap-2"
-  style="animation-delay: {index * 0.035}s"
-  onmouseenter={handleMouseEnter}
-  onmouseleave={handleMouseLeave}>
-  <img src={bookmark.favicon} alt={bookmark.title} class="h-4 w-4" />
-  {#if editingState === "title"}
-    <!-- svelte-ignore a11y_autofocus -->
-    <input
-      type="text"
-      bind:value={editableTitle}
-      onkeydown={handleEdit}
-      onblur={() => (editingState = "none")}
-      class="font-geist w-full truncate bg-transparent font-medium focus:outline-none"
-      autofocus />
-  {:else if editingState === "url"}
-    <!-- svelte-ignore a11y_autofocus -->
-    <input
-      type="text"
-      bind:value={editableUrl}
-      onkeydown={handleEdit}
-      onblur={() => (editingState = "none")}
-      class="font-jetbrains-mono w-full bg-transparent py-0.5 text-sm text-gray-400 focus:outline-none"
-      autofocus />
-  {:else}
-    <a
-      href={bookmark.url}
-      class="font-geist max-w-1/2 truncate font-medium {!isOptionHeld
-        ? 'hover:text-[#e11d48]'
-        : 'cursor-text'}"
-      style="max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-      onclick={enterTitleEditMode}>{bookmark.title}</a>
-    <div
-      role="button"
-      tabindex="0"
-      class="font-jetbrains-mono text-sm text-gray-400"
-      onclick={enterUrlEditMode}
-      onkeydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          enterUrlEditMode(e);
-        }
-      }}
-      onmouseenter={() => (isUrlHovered = true)}
-      onmouseleave={() => (isUrlHovered = false)}>
-      <span
-        class="max-w-1/2 overflow-hidden text-ellipsis whitespace-nowrap"
-        style="max-width: 50%;">
-        {isUrlHovered ? displayUrlOnHover(bookmark.url) : formattedUrl}
-      </span>
-    </div>
-    <X
-      size={16}
-      class="ml-auto cursor-pointer text-red-500 transition-opacity duration-200 hover:text-red-800"
-      strokeWidth={2.25}
-      style="opacity: {isHovered && isOptionHeld
-        ? 1
-        : 0}; pointer-events: {isHovered && isOptionHeld ? 'auto' : 'none'}"
-      onclick={() => onDeleteBookmark(bookmark.id)} />
-    <p class="font-jetbrains-mono text-sm text-gray-400">
-      {formattedDate}
-    </p>
-  {/if}
+<div>
+  <div
+    role="button"
+    tabindex="0"
+    class="motion-opacity-in-0 motion-duration-400 flex items-center gap-2"
+    style="animation-delay: {index * 0.035}s"
+    onmouseenter={handleMouseEnter}
+    onmouseleave={handleMouseLeave}>
+    <img src={bookmark.favicon} alt={bookmark.title} class="h-4 w-4" />
+    {#if editingState === "title"}
+      <!-- svelte-ignore a11y_autofocus -->
+      <input
+        type="text"
+        bind:value={editableTitle}
+        onkeydown={handleEdit}
+        onblur={() => (editingState = "none")}
+        class="font-geist w-full truncate bg-transparent font-medium focus:outline-none"
+        autofocus />
+    {:else if editingState === "url"}
+      <!-- svelte-ignore a11y_autofocus -->
+      <input
+        type="text"
+        bind:value={editableUrl}
+        onkeydown={handleEdit}
+        onblur={() => (editingState = "none")}
+        class="font-jetbrains-mono w-full bg-transparent py-0.5 text-sm text-gray-400 focus:outline-none"
+        autofocus />
+    {:else}
+      <a
+        href={bookmark.url}
+        class="font-geist max-w-1/2 truncate font-medium {!isOptionHeld
+          ? 'hover:text-[#e11d48]'
+          : 'cursor-text'}"
+        style="max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+        onclick={enterTitleEditMode}>{bookmark.title}</a>
+      <div
+        role="button"
+        tabindex="0"
+        class="font-jetbrains-mono text-sm text-gray-400"
+        onclick={enterUrlEditMode}
+        onkeydown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            enterUrlEditMode(e);
+          }
+        }}
+        onmouseenter={() => (isUrlHovered = true)}
+        onmouseleave={() => (isUrlHovered = false)}>
+        <span
+          class="max-w-1/2 overflow-hidden text-ellipsis whitespace-nowrap"
+          style="max-width: 50%;">
+          {isUrlHovered ? displayUrlOnHover(bookmark.url) : formattedUrl}
+        </span>
+      </div>
+      <X
+        size={16}
+        class="ml-auto cursor-pointer text-red-500 transition-opacity duration-200 hover:text-red-800"
+        strokeWidth={2.25}
+        style="opacity: {isHovered && isOptionHeld
+          ? 1
+          : 0}; pointer-events: {isHovered && isOptionHeld ? 'auto' : 'none'}"
+        onclick={() => onDeleteBookmark(bookmark.id)} />
+      <p class="font-jetbrains-mono text-sm text-gray-400">
+        {formattedDate}
+      </p>
+    {/if}
+  </div>
 </div>
