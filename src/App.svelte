@@ -52,6 +52,19 @@
     console.log(data);
     fetchBookmarks();
   }
+
+  async function editBookmark(id: number, title: string, url: string) {
+    const response = await fetch(`http://localhost:5570/api/update/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title, url }),
+    });
+    const data = await response.json();
+    console.log(data);
+    fetchBookmarks();
+  }
 </script>
 
 <main>
@@ -60,6 +73,7 @@
     <Bookmarks
       bookmarks={bookmarks}
       onCreateBookmark={handleCreateBookmark}
-      onDeleteBookmark={deleteBookmark} />
+      onDeleteBookmark={deleteBookmark}
+      onEditBookmark={editBookmark} />
   </div>
 </main>

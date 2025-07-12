@@ -2,11 +2,13 @@
   import { Plus } from "lucide-svelte";
   import Bookmark from "./Bookmark.svelte";
   import Spinner from "./lib/Spinner.svelte";
-  let { bookmarks, onCreateBookmark, onDeleteBookmark } = $props<{
-    bookmarks: BookmarkType[];
-    onCreateBookmark: (bookmark: BookmarkType) => void;
-    onDeleteBookmark: (id: number) => void;
-  }>();
+  let { bookmarks, onCreateBookmark, onDeleteBookmark, onEditBookmark } =
+    $props<{
+      bookmarks: BookmarkType[];
+      onCreateBookmark: (bookmark: BookmarkType) => void;
+      onDeleteBookmark: (id: number) => void;
+      onEditBookmark: (id: number, title: string, url: string) => void;
+    }>();
   type BookmarkType = {
     id: number;
     title: string;
@@ -101,6 +103,7 @@
       <Bookmark
         bookmark={bookmark}
         onDeleteBookmark={onDeleteBookmark}
+        onEditBookmark={onEditBookmark}
         index={index} />
     {/each}
   </div>
