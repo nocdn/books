@@ -188,6 +188,21 @@
     input.click();
   }
 
+  function handleTagClick(suggestion: string) {
+    // Replace current partial tag (after last '#') with full suggestion + space
+    input = input.replace(/#([\w-]*)$/, `#${suggestion} `);
+    // Keep focus in the input so user can continue typing
+    inputElement?.focus();
+  }
+
+  function addTag(bookmarkId: number, tag: string) {
+    console.log("addTag", bookmarkId, tag);
+  }
+
+  function removeTag(bookmarkId: number, tag: string) {
+    console.log("removeTag", bookmarkId, tag);
+  }
+
   $effect(() => {
     const handleGlobalKeydown = (event: KeyboardEvent) => {
       if (event.key === "/" && inputElement) {
@@ -293,10 +308,13 @@
           ? 'h-6'
           : 'h-0'}">
         {#each filteredTags as tag}
-          <p
-            class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 rounded-sm bg-[#F1F1F1] px-1.5 py-0.5 text-[15px] font-medium text-[#787879]">
+          <button
+            role="button"
+            tabindex="0"
+            class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 cursor-pointer rounded-sm bg-[#F1F1F1] px-1.5 py-0.5 text-[15px] font-medium text-[#787879] hover:bg-[#e2e2e2]"
+            onclick={() => handleTagClick(tag)}>
             {tag}
-          </p>
+          </button>
         {/each}
       </div>
       <div
@@ -307,6 +325,8 @@
       <div class="flex flex-col gap-3">
         {#each filteredBookmarks as bookmark, index (bookmark.id)}
           <Bookmark
+            onAddTag={addTag}
+            onRemoveTag={removeTag}
             bookmark={bookmark}
             onDeleteBookmark={deleteBookmark}
             onEditBookmark={editBookmark}

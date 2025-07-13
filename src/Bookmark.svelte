@@ -1,11 +1,20 @@
 <script lang="ts">
-  import { X } from "lucide-svelte";
-  import { onMount } from "svelte";
+  import { Plus, X } from "lucide-svelte";
+  import { onMount, tick } from "svelte";
 
-  let { bookmark, onDeleteBookmark, onEditBookmark, index } = $props<{
+  let {
+    bookmark,
+    onDeleteBookmark,
+    onEditBookmark,
+    onAddTag,
+    onRemoveTag,
+    index,
+  } = $props<{
     bookmark: Bookmark;
     onDeleteBookmark: (id: number) => void;
     onEditBookmark: (id: number, title: string, url: string) => void;
+    onAddTag: (bookmarkId: number, tag: string) => void;
+    onRemoveTag: (bookmarkId: number, tag: string) => void;
     index: number;
   }>();
 
@@ -42,7 +51,8 @@
     new URL(bookmark.url).hostname.replace("www.", "") + "/",
   );
 
-  let isHovered = $state(false);
+  let isExpanded = $state(false);
+  let isAddingTag = $state(false);
   let isOptionHeld = $state(false);
   let editingState = $state<"none" | "title" | "url">("none");
   let editableTitle = $state(bookmark.title);
@@ -50,10 +60,12 @@
   let isUrlHovered = $state(false);
 
   function handleMouseEnter() {
-    isHovered = true;
+    isExpanded = true;
   }
   function handleMouseLeave() {
-    isHovered = false;
+    if (!isAddingTag) {
+      isExpanded = false;
+    }
   }
 
   function enterTitleEditMode(e: Event) {
@@ -115,16 +127,30 @@
     }
     return cleanUrl;
   }
+
+  let newTagValue: string = $state("");
+  let newTagInputElement = $state<HTMLInputElement | null>(null);
+
+  function handleNewTag() {
+    const tag = newTagValue.trim();
+    if (tag) {
+      onAddTag(bookmark.id, tag);
+    }
+    newTagValue = "";
+    isAddingTag = false;
+  }
 </script>
 
-<div>
+<div
+  role="button"
+  tabindex="0"
+  onmouseenter={handleMouseEnter}
+  onmouseleave={handleMouseLeave}>
   <div
     role="button"
     tabindex="0"
     class="motion-opacity-in-0 motion-duration-400 flex items-center gap-2"
-    style="animation-delay: {index * 0.035}s"
-    onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}>
+    style="animation-delay: {index * 0.035}s">
     <img src={bookmark.favicon} alt={bookmark.title} class="h-4 w-4" />
     {#if editingState === "title"}
       <!-- svelte-ignore a11y_autofocus -->
@@ -174,9 +200,9 @@
         size={16}
         class="ml-auto cursor-pointer text-red-500 transition-opacity duration-200 hover:text-red-800"
         strokeWidth={2.25}
-        style="opacity:{isHovered && isOptionHeld
+        style="opacity:{isExpanded && isOptionHeld
           ? 1
-          : 0};pointer-events:{isHovered && isOptionHeld ? 'auto' : 'none'}"
+          : 0};pointer-events:{isExpanded && isOptionHeld ? 'auto' : 'none'}"
         onclick={() => onDeleteBookmark(bookmark.id)} />
 
       <p class="font-jetbrains-mono text-sm text-gray-400">{formattedDate}</p>
@@ -185,15 +211,51 @@
 
   <div
     class={`flex w-full items-center gap-2 transition-all ${
-      isHovered && isOptionHeld && bookmark.tags.length > 0 ? "h-8" : "h-0"
+      isExpanded && (isOptionHeld || isAddingTag) && bookmark.tags.length > 0
+        ? "h-8"
+        : "h-0"
     }`}>
-    {#if bookmark.tags.length > 0 && isHovered && isOptionHeld}
+    {#if bookmark.tags.length > 0 && isExpanded && (isOptionHeld || isAddingTag)}
       {#each bookmark.tags as tag}
         <div
-          class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit rounded-sm bg-[#F1F1F1] px-2 py-1 text-xs font-medium text-[#787879]">
+          onclick={() => {
+            onRemoveTag(bookmark.id, tag);
+          }}
+          class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit cursor-pointer rounded-sm bg-[#F1F1F1] px-2 py-1 text-xs font-medium text-[#787879] hover:bg-[#FFEEED] hover:text-[#FF574B]">
           {tag.toUpperCase()}
         </div>
       {/each}
+      {#if isAddingTag}
+        <!-- svelte-ignore a11y_autofocus -->
+        <input
+          type="text"
+          class="font-jetbrains-mono mt-1 w-fit py-1 pl-1.5 text-xs font-medium uppercase focus:outline-gray-300"
+          bind:value={newTagValue}
+          bind:this={newTagInputElement}
+          onkeydown={(e) => {
+            if (e.key === "Enter") {
+              handleNewTag();
+            } else if (e.key === "Escape") {
+              isAddingTag = false;
+              newTagValue = "";
+            }
+          }}
+          onblur={() => {
+            isAddingTag = false;
+            newTagValue = "";
+          }} />
+      {:else}
+        <div class="">
+          <Plus
+            size={16}
+            class="cursor-pointer text-[#787879]"
+            onclick={async () => {
+              isAddingTag = true;
+              await tick();
+              newTagInputElement?.focus();
+            }} />
+        </div>
+      {/if}
     {/if}
   </div>
 </div>
