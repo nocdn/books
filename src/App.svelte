@@ -209,15 +209,39 @@
   });
 
   let filteredBookmarks = $derived(
-    bookmarks.filter(
-      (bookmark: Bookmark) =>
-        bookmark.title.toLowerCase().includes(input.toLowerCase()) ||
-        bookmark.tags.some((tag) =>
-          tag.toLowerCase().includes(input.toLowerCase()),
-        ) ||
-        bookmark.url.toLowerCase().includes(input.toLowerCase()) ||
-        bookmark.createdAt.toLowerCase().includes(input.toLowerCase()),
-    ),
+    bookmarks.filter((bookmark: Bookmark) => {
+      const lowerInput = input.toLowerCase();
+
+      // If the input is just "#" (optionally followed by spaces), don’t filter anything.
+      if (/^#\s*$/.test(lowerInput)) {
+        return true;
+      }
+
+      // Split the query into whitespace-separated tokens
+      const tokens = lowerInput.trim().split(/\s+/);
+
+      // Every token must match somewhere in the bookmark
+      return tokens.every((token) => {
+        if (token === "") return true;
+
+        if (token.startsWith("#")) {
+          // Tag token → match against bookmark tags (strip leading '#')
+          const tagQuery = token.slice(1);
+          if (tagQuery === "") return true; // token is just '#'
+          return bookmark.tags.some((tag) =>
+            tag.toLowerCase().includes(tagQuery),
+          );
+        }
+
+        // Non-tag token → match against title, url, date, or tags
+        return (
+          bookmark.title.toLowerCase().includes(token) ||
+          bookmark.url.toLowerCase().includes(token) ||
+          bookmark.createdAt.toLowerCase().includes(token) ||
+          bookmark.tags.some((tag) => tag.toLowerCase().includes(token))
+        );
+      });
+    }),
   );
 
   let filteredTags = $derived(
