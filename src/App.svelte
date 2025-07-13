@@ -29,6 +29,7 @@
   };
 
   let bookmarks = $state<Bookmark[]>([]);
+  let tags = $state<string[]>([]);
 
   async function fetchBookmarks() {
     if (!backendAddress) return;
@@ -38,8 +39,16 @@
     bookmarks = data.bookmarks;
   }
 
+  async function fetchTags() {
+    const response = await fetch(`${backendAddress}/api/tags`);
+    const data = await response.json();
+    console.log("fetched tags", data);
+    tags = data.tags;
+  }
+
   $effect(() => {
     fetchBookmarks();
+    fetchTags();
   });
 
   async function deleteBookmark(id: number) {
