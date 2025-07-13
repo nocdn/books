@@ -83,6 +83,8 @@
       editableTitle = bookmark.title;
       editableUrl = bookmark.url;
       editingState = "url";
+    } else {
+      navigator.clipboard.writeText(bookmark.url);
     }
   }
 
