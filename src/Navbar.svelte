@@ -1,16 +1,50 @@
 <script lang="ts">
-  let { onGroupChange }: { onGroupChange: (group: string) => void } = $props();
+  let {
+    onGroupChange,
+    onBackendChange,
+    backendAddress,
+  }: {
+    onGroupChange: (group: string) => void;
+    onBackendChange: (backend: string) => void;
+    backendAddress: string;
+  } = $props();
   import hand from "./assets/peace-hand.svg";
   import arrows from "./assets/arrow-separate-vertical.svg";
+  import { Check } from "lucide-svelte";
+  import Spinner from "./lib/Spinner.svelte";
+
   let groupColors = {
     main: "bg-blue-500",
     work: "bg-red-500",
   };
 
-  let selectedGroup = $state("main");
+  let showingOptions = $state(false);
+
+  type Status = "idle" | "typing" | "saved";
+  let status: Status = $state("idle");
+  let debounceTimer: number;
+
+  let localBackendAddress = $state(backendAddress);
+
+  $effect(() => {
+    localBackendAddress = backendAddress;
+  });
+
+  function handleAddressInput() {
+    status = "typing";
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      let addressToSave = localBackendAddress.trim().replace(/\/+$/, "");
+      if (addressToSave && !/^https?:\/\//i.test(addressToSave)) {
+        addressToSave = `http://${addressToSave}`;
+      }
+      onBackendChange(addressToSave);
+      status = "saved";
+    }, 500);
+  }
 
   async function handleExport() {
-    const response = await fetch("http://localhost:5570/api/export");
+    const response = await fetch(`${backendAddress}/api/export`);
     const contentDisposition = response.headers.get("Content-Disposition");
 
     const now = new Date();
@@ -57,10 +91,33 @@
     <img src={arrows} alt="arrows" class="h-3.5 w-3.5" />
   </div>
   <div class="flex items-center gap-2">
+    {#if showingOptions}
+      <div class="flex items-center gap-2.5">
+        <p class="text-sm font-medium text-gray-500">backend:</p>
+        <input
+          type="text"
+          placeholder="https://books.address.com/"
+          bind:value={localBackendAddress}
+          class="w-48 rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-500"
+          oninput={handleAddressInput} />
+        {#if status === "typing"}
+          <Spinner size={16} />
+        {:else if status === "saved"}
+          <Check size={16} class="text-green-600" />
+        {/if}
+      </div>
+      <button
+        class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-500"
+        onclick={handleExport}>
+        export
+      </button>
+    {/if}
     <button
       class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-500"
-      onclick={handleExport}>
-      export
+      onclick={() => {
+        showingOptions = !showingOptions;
+      }}>
+      {showingOptions ? "close" : "options"}
     </button>
   </div>
 </nav>

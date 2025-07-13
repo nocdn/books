@@ -1,8 +1,23 @@
 <script lang="ts">
   import Navbar from "./Navbar.svelte";
   import Bookmarks from "./Bookmarks.svelte";
+
+  let backendAddress = $state("");
+
+  $effect(() => {
+    const savedAddress = localStorage.getItem("backendAddress");
+    if (savedAddress) {
+      backendAddress = savedAddress;
+    }
+  });
+
   function handleGroupChange(group: string) {
     console.log(group);
+  }
+
+  function handleBackendChange(newAddress: string) {
+    backendAddress = newAddress;
+    localStorage.setItem("backendAddress", newAddress);
   }
 
   type Bookmark = {
@@ -17,16 +32,19 @@
   let bookmarks = $state<Bookmark[]>([]);
 
   async function fetchBookmarks() {
-    const response = await fetch("http://localhost:5570/api/list");
+    if (!backendAddress) return;
+    const response = await fetch(`${backendAddress}/api/list`);
     const data = await response.json();
     console.log("fetched bookmark", data);
     bookmarks = data.bookmarks;
   }
 
-  fetchBookmarks();
+  $effect(() => {
+    fetchBookmarks();
+  });
 
   async function deleteBookmark(id: number) {
-    const response = await fetch(`http://localhost:5570/api/delete/${id}`, {
+    const response = await fetch(`${backendAddress}/api/delete/${id}`, {
       method: "DELETE",
     });
     const data = await response.json();
@@ -41,7 +59,7 @@
   };
 
   async function handleCreateBookmark(bookmark: submittedBookmark) {
-    const response = await fetch("http://localhost:5570/api/create", {
+    const response = await fetch(`${backendAddress}/api/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,7 +72,7 @@
   }
 
   async function editBookmark(id: number, title: string, url: string) {
-    const response = await fetch(`http://localhost:5570/api/update/${id}`, {
+    const response = await fetch(`${backendAddress}/api/update/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -68,7 +86,10 @@
 </script>
 
 <main>
-  <Navbar onGroupChange={handleGroupChange} />
+  <Navbar
+    onGroupChange={handleGroupChange}
+    onBackendChange={handleBackendChange}
+    backendAddress={backendAddress} />
   <div class="mt-24 grid w-full place-items-center">
     <Bookmarks
       bookmarks={bookmarks}
