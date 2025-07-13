@@ -1,7 +1,6 @@
 <script lang="ts">
   import Navbar from "./Navbar.svelte";
   import Bookmarks from "./Bookmarks.svelte";
-
   let backendAddress = $state("");
 
   $effect(() => {
@@ -66,9 +65,23 @@
       },
       body: JSON.stringify(bookmark),
     });
+
+    // Only proceed when the server confirms success
+    if (!response.ok) {
+      // Attempt to parse JSON error, but ignore if it fails
+      const errPayload = await response.json().catch(() => null);
+      console.error("Failed to create bookmark", errPayload);
+      throw new Error(errPayload?.message ?? "Failed to create bookmark");
+    }
+
     const data = await response.json();
     console.log(data);
-    fetchBookmarks();
+
+    // Refresh list after successful creation
+    await fetchBookmarks();
+
+    // Return created bookmark payload so caller can await
+    return data;
   }
 
   async function editBookmark(id: number, title: string, url: string) {

@@ -113,11 +113,11 @@
       </button>
     {/if}
     <button
-      class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-500"
+      class="flex cursor-pointer items-center gap-2 py-1.5 pr-3 pl-0 text-sm font-medium text-gray-500"
       onclick={() => {
         showingOptions = !showingOptions;
       }}>
-      {showingOptions ? "close" : "options"}
+      options
     </button>
   </div>
 </nav>

@@ -18,14 +18,27 @@
     createdAt: string;
   };
 
-  const formattedDate = $derived(
-    new Date(bookmark.createdAt).toLocaleString("en-US", {
+  let formattedDate = $derived(getFormattedDate(bookmark.createdAt));
+
+  function getFormattedDate(dateStr: string) {
+    const [datePart, timePart] = dateStr.split(", ");
+    const [day, month, year] = datePart.split("/");
+    const [hours, minutes, seconds] = timePart.split(":");
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hours),
+      Number(minutes),
+      Number(seconds),
+    );
+    return date.toLocaleString("en-US", {
       month: "short",
       day: "numeric",
-    }),
-  );
+    });
+  }
 
-  const formattedUrl = $derived(
+  let formattedUrl = $derived(
     new URL(bookmark.url).hostname.replace("www.", "") + "/",
   );
 

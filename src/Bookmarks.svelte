@@ -2,13 +2,8 @@
   import { Plus } from "lucide-svelte";
   import Bookmark from "./Bookmark.svelte";
   import Spinner from "./lib/Spinner.svelte";
-  let { bookmarks, onCreateBookmark, onDeleteBookmark, onEditBookmark } =
-    $props<{
-      bookmarks: BookmarkType[];
-      onCreateBookmark: (bookmark: BookmarkType) => void;
-      onDeleteBookmark: (id: number) => void;
-      onEditBookmark: (id: number, title: string, url: string) => void;
-    }>();
+
+  // ----------------- Types -----------------
   type BookmarkType = {
     id: number;
     title: string;
@@ -18,9 +13,27 @@
     createdAt: string;
   };
 
+  type SubmittedBookmark = {
+    url: string;
+    tags: string[];
+    createdAt: string;
+  };
+
+  // ----------------- Props -----------------
+  let { bookmarks, onCreateBookmark, onDeleteBookmark, onEditBookmark } =
+    $props<{
+      bookmarks: BookmarkType[];
+      onCreateBookmark: (bookmark: SubmittedBookmark) => Promise<any>;
+      onDeleteBookmark: (id: number) => void;
+      onEditBookmark: (id: number, title: string, url: string) => void;
+    }>();
+
   let input = $state("");
   let isLoading = $state(false);
-  let inputSending = $state(false);
+  // While request is pending, input text is gray
+  let isPending = $state(false);
+  // After success, trigger fade-out animation
+  let isFading = $state(false);
   let inputElement: HTMLInputElement;
 
   const tags = $derived(
@@ -34,20 +47,38 @@
       if (!/^https?:\/\//i.test(submittedUrl)) {
         submittedUrl = `https://${submittedUrl}`;
       }
+      // Start spinner & mark as pending
+      isLoading = true;
+      isPending = true;
+
+      // Trigger creation and await its completion to stop spinner
       onCreateBookmark({
         url: submittedUrl,
         tags: tags,
         createdAt: new Date().toLocaleString("en-GB", {
           timeZone: "Europe/London",
         }),
-      });
-      isLoading = true;
-      inputSending = true;
-      input = "";
-      setTimeout(() => {
-        isLoading = false;
-        inputSending = false;
-      }, 500);
+      })
+        .then(() => {
+          // Stop spinner and pending state
+          isLoading = false;
+          isPending = false;
+
+          // Trigger fade-out of the input text
+          isFading = true;
+
+          // After the fade animation completes, clear input & reset
+          setTimeout(() => {
+            input = "";
+            isFading = false;
+          }, 120); // slightly longer than motion-duration-100
+        })
+        .catch(() => {
+          // Stop spinner even if creation fails; error handling could be added here
+          isLoading = false;
+          isPending = false;
+          isFading = false;
+        });
     }
   }
 
@@ -112,9 +143,9 @@
     <input
       type="text"
       placeholder="DREAM BIG, START SMALL"
-      class="font-jetbrains-mono w-full bg-transparent text-[15px] leading-none font-medium outline-none {inputSending
+      class="font-jetbrains-mono w-full bg-transparent text-[15px] leading-none font-medium outline-none {isFading
         ? 'motion-opacity-out-0 motion-duration-100'
-        : ''}"
+        : ''} {isPending ? 'text-gray-500' : ''}"
       bind:value={input}
       onkeydown={handleKeydown}
       bind:this={inputElement} />
