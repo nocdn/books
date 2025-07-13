@@ -217,16 +217,15 @@
     }`}>
     {#if bookmark.tags.length > 0 && isExpanded && (isOptionHeld || isAddingTag)}
       {#each bookmark.tags as tag}
-        <div
+        <button
           onclick={() => {
             onRemoveTag(bookmark.id, tag);
           }}
           class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit cursor-pointer rounded-sm bg-[#F1F1F1] px-2 py-1 text-xs font-medium text-[#787879] hover:bg-[#FFEEED] hover:text-[#FF574B]">
           {tag.toUpperCase()}
-        </div>
+        </button>
       {/each}
       {#if isAddingTag}
-        <!-- svelte-ignore a11y_autofocus -->
         <input
           type="text"
           class="font-jetbrains-mono mt-1 w-fit py-1 pl-1.5 text-xs font-medium uppercase focus:outline-gray-300"

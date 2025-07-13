@@ -195,12 +195,60 @@
     inputElement?.focus();
   }
 
-  function addTag(bookmarkId: number, tag: string) {
-    console.log("addTag", bookmarkId, tag);
+  async function addTag(bookmarkId: number, tag: string) {
+    const bookmark = bookmarks.find((b) => b.id === bookmarkId);
+    if (!bookmark) {
+      console.error("Bookmark not found");
+      return;
+    }
+
+    if (bookmark.tags.includes(tag)) {
+      return;
+    }
+
+    const updatedTags = [...bookmark.tags, tag];
+
+    const response = await fetch(`${backendAddress}/api/update/${bookmarkId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tags: updatedTags }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to add tag");
+      return;
+    }
+
+    await fetchBookmarks();
+    await fetchTags();
   }
 
-  function removeTag(bookmarkId: number, tag: string) {
-    console.log("removeTag", bookmarkId, tag);
+  async function removeTag(bookmarkId: number, tag: string) {
+    const bookmark = bookmarks.find((b) => b.id === bookmarkId);
+    if (!bookmark) {
+      console.error("Bookmark not found");
+      return;
+    }
+
+    const updatedTags = bookmark.tags.filter((t) => t !== tag);
+
+    const response = await fetch(`${backendAddress}/api/update/${bookmarkId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tags: updatedTags }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to remove tag");
+      return;
+    }
+
+    await fetchBookmarks();
+    await fetchTags();
   }
 
   $effect(() => {
@@ -309,7 +357,6 @@
           : 'h-0'}">
         {#each filteredTags as tag}
           <button
-            role="button"
             tabindex="0"
             class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 cursor-pointer rounded-sm bg-[#F1F1F1] px-1.5 py-0.5 text-[15px] font-medium text-[#787879] hover:bg-[#e2e2e2]"
             onclick={() => handleTagClick(tag)}>
