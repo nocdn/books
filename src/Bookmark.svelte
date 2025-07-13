@@ -190,7 +190,7 @@
     {#if bookmark.tags.length > 0 && isHovered && isOptionHeld}
       {#each bookmark.tags as tag}
         <div
-          class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit rounded-sm bg-[#FFEEED] px-2 py-1 text-xs font-medium text-[#FF574B]">
+          class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit rounded-sm bg-[#F1F1F1] px-2 py-1 text-xs font-medium text-[#787879]">
           {tag.toUpperCase()}
         </div>
       {/each}

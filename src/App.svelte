@@ -90,6 +90,7 @@
 
     // Refresh list after successful creation
     await fetchBookmarks();
+    await fetchTags();
 
     // Return created bookmark payload so caller can await
     return data;
@@ -116,12 +117,31 @@
   let isFading = $state(false);
   let inputElement: HTMLInputElement;
 
+  // parsedTags is the array of tags in the input
   const parsedTags = $derived(
     input.match(/#([\w-]+)/g)?.map((t) => t.substring(1)) ?? [],
   );
   const url = $derived(input.replace(/#([\w-]+)/g, "").trim());
 
+  const currentTagQuery = $derived(input.match(/#([\w-]*)$/)?.[1] ?? null);
+
+  // when `currentTagQuery` is not null, are currently typing a tag so show suggestions.
+  const showTagSuggestions = $derived(currentTagQuery !== null);
+
   function handleKeydown(event: KeyboardEvent) {
+    // If only one tag suggestion remains, Tab autocompletes it.
+    if (
+      event.key === "Tab" &&
+      showTagSuggestions &&
+      filteredTags.length === 1
+    ) {
+      event.preventDefault();
+      const suggestion = filteredTags[0];
+      // Replace the current partial tag (after the last '#') with the full suggestion plus a trailing space
+      input = input.replace(/#([\w-]*)$/, `#${suggestion} `);
+      return; // Skip further handling
+    }
+
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       let submittedUrl = url;
       if (!/^https?:\/\//i.test(submittedUrl)) {
@@ -199,6 +219,19 @@
         bookmark.createdAt.toLowerCase().includes(input.toLowerCase()),
     ),
   );
+
+  let filteredTags = $derived(
+    currentTagQuery === null
+      ? []
+      : currentTagQuery === ""
+        ? tags
+        : tags.filter((tag) =>
+            tag.toLowerCase().includes(currentTagQuery.toLowerCase()),
+          ),
+  );
+
+  $inspect(parsedTags);
+  $inspect(filteredTags);
 </script>
 
 <main>
@@ -232,13 +265,12 @@
           bind:this={inputElement} />
       </div>
       <div
-        class="flex h-0 items-center gap-2 transition-all duration-200 {parsedTags.length >
-        0
+        class="flex h-0 items-center gap-2 transition-all duration-200 {showTagSuggestions
           ? 'h-6'
           : 'h-0'}">
-        {#each parsedTags as tag}
+        {#each filteredTags as tag}
           <p
-            class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 rounded-sm bg-[#EAF8EF] px-1.5 py-0.5 text-[15px] font-medium text-[#00C460]">
+            class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 rounded-sm bg-[#F1F1F1] px-1.5 py-0.5 text-[15px] font-medium text-[#787879]">
             {tag}
           </p>
         {/each}
