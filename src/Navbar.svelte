@@ -92,13 +92,13 @@
   </div>
   <div class="flex items-center gap-2">
     {#if showingOptions}
-      <div class="flex items-center gap-2.5">
+      <div class="motion-preset-blur-left-sm flex items-center gap-2.5">
         <p class="text-sm font-medium text-gray-500">backend:</p>
         <input
           type="text"
           placeholder="https://books.address.com/"
           bind:value={localBackendAddress}
-          class="w-48 rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-500"
+          class="w-52 rounded-md border border-gray-200 px-2 py-1 text-sm font-medium text-gray-500"
           oninput={handleAddressInput} />
         {#if status === "typing"}
           <Spinner size={16} />
@@ -107,13 +107,15 @@
         {/if}
       </div>
       <button
-        class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-500"
+        class="motion-preset-blur-left-sm flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-500"
         onclick={handleExport}>
         export
       </button>
     {/if}
     <button
-      class="flex cursor-pointer items-center gap-2 py-1.5 pr-3 pl-0 text-sm font-medium text-gray-500"
+      class="flex cursor-pointer items-center gap-2 py-1.5 pr-3 pl-0 text-sm font-medium text-gray-500 transition-opacity {showingOptions
+        ? 'opacity-60'
+        : ''}"
       onclick={() => {
         showingOptions = !showingOptions;
       }}>

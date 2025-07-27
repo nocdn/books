@@ -34,11 +34,13 @@
   let tags = $state<string[]>([]);
 
   async function fetchBookmarks() {
+    isLoading = true;
     if (!backendAddress) return;
     const response = await fetch(`${backendAddress}/api/list`);
     const data = await response.json();
     console.log("fetched bookmark", data);
     bookmarks = data.bookmarks;
+    isLoading = false;
   }
 
   async function fetchTags() {
@@ -54,12 +56,46 @@
   });
 
   async function deleteBookmark(id: number) {
-    const response = await fetch(`${backendAddress}/api/delete/${id}`, {
-      method: "DELETE",
-    });
-    const data = await response.json();
-    console.log(data);
-    fetchBookmarks();
+    // Store the bookmark in case we need to restore it
+    const bookmarkToDelete = bookmarks.find((b) => b.id === id);
+    if (!bookmarkToDelete) {
+      console.error("Bookmark not found");
+      return;
+    }
+
+    // Optimistically remove from UI immediately
+    bookmarks = bookmarks.filter((b) => b.id !== id);
+
+    try {
+      const response = await fetch(`${backendAddress}/api/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        // If delete failed, restore the bookmark
+        bookmarks = [...bookmarks, bookmarkToDelete].sort(
+          (a, b) => b.id - a.id,
+        );
+        const errPayload = await response.json().catch(() => null);
+        console.error("Failed to delete bookmark", errPayload);
+        throw new Error(errPayload?.message ?? "Failed to delete bookmark");
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      // On success, we don't need to do anything since bookmark is already removed
+      // But we might want to refresh tags if they've changed
+      await fetchTags();
+    } catch (error) {
+      // If there was a network error or other exception, restore the bookmark
+      if (bookmarks.find((b) => b.id === id) === undefined) {
+        bookmarks = [...bookmarks, bookmarkToDelete].sort(
+          (a, b) => b.id - a.id,
+        );
+      }
+      console.error("Error deleting bookmark:", error);
+    }
   }
 
   type submittedBookmark = {
@@ -142,7 +178,7 @@
       return; // Skip further handling
     }
 
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+    if (event.key === "Enter") {
       let submittedUrl = url;
       if (!/^https?:\/\//i.test(submittedUrl)) {
         submittedUrl = `https://${submittedUrl}`;
@@ -329,27 +365,33 @@
   <div class="mt-24 grid w-full place-items-center">
     <div class="flex w-3xl flex-col gap-4">
       <div
-        class="group flex items-center gap-2 rounded-lg border border-gray-200 p-3 focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-gray-700/45">
+        class="group flex h-12 items-center gap-2 rounded-lg border border-gray-200 px-3 transition-all focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-gray-700/45">
         <div
           role="button"
           tabindex="0"
-          class="mr-0.5 grid h-5 w-5 cursor-pointer place-items-center opacity-50 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+          class="mr-0.5 grid h-5 w-5 cursor-pointer place-items-center opacity-50 transition-opacity duration-200 group-focus-within:opacity-100"
           onmousedown={handleFileUpload}>
           {#if isLoading}
             <Spinner size={22} />
           {:else}
-            <Plus size={18} />
+            <Plus size={17} class="mt-[1px]" />
           {/if}
         </div>
         <input
           type="text"
-          placeholder="DREAM BIG, START SMALL"
-          class="font-jetbrains-mono w-full bg-transparent text-[15px] leading-none font-medium outline-none {isFading
+          placeholder="search or enter a url"
+          class="font-sf-pro-display w-full bg-transparent text-[17px] leading-none font-medium outline-none {isFading
             ? 'motion-opacity-out-0 motion-duration-100'
             : ''} {isPending ? 'text-gray-500' : ''}"
           bind:value={input}
           onkeydown={handleKeydown}
           bind:this={inputElement} />
+        {#if input.length > 0}
+          <div
+            class="font-jetbrains-mono motion-opacity-in-0 motion-blur-in-[2px] motion-duration-300 rounded-sm bg-gray-100 px-2 py-0.5 text-[13px] font-medium text-gray-500">
+            ENTER
+          </div>
+        {/if}
       </div>
       <div
         class="flex h-0 items-center gap-2 transition-all duration-200 {showTagSuggestions
@@ -365,11 +407,16 @@
         {/each}
       </div>
       <div
-        class="font-geist-mono flex items-center justify-between border-b border-gray-200 py-3 text-sm text-gray-400">
-        <p class="font-medium">TITLE</p>
-        <p>CREATED AT</p>
+        class="font-geist-mono ml-[2px] flex items-center justify-between border-b border-gray-200 py-3 text-sm text-gray-400">
+        <p class="font-sf-pro-text font-[450]">TITLE</p>
+        <p class="font-sf-pro-text font-[450]">DATE</p>
       </div>
-      <div class="flex flex-col gap-3">
+      <div class="ml-[2px] flex flex-col gap-3">
+        {#if filteredBookmarks.length === 0}
+          <p class="font-sf-pro-rounded text-left font-medium text-gray-400">
+            how empty...
+          </p>
+        {/if}
         {#each filteredBookmarks as bookmark, index (bookmark.id)}
           <Bookmark
             onAddTag={addTag}

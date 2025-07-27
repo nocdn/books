@@ -23,6 +23,9 @@
   --font-ibm-plex-mono: "IBM Plex Mono", monospace;
   --font-jetbrains-mono: "JetBrains Mono", monospace;
   --font-inter: "Inter", sans-serif;
+  --font-sf-pro-rounded: "SF Pro Rounded", "Geist", sans-serif;
+  --font-sf-pro-text: "SF Pro Text", "Geist", sans-serif;
+  --font-sf-pro-display: "SF Pro Display", "Geist", sans-serif;
 }
 
 @media (prefers-color-scheme: light) {

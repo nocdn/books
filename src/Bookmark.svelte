@@ -175,25 +175,22 @@
     {:else}
       <a
         href={bookmark.url}
-        class="font-geist max-w-1/2 truncate font-medium {!isOptionHeld
+        class="font-geist truncate font-medium {!isOptionHeld
           ? 'hover:text-[#c11a3f]'
           : 'cursor-text'}"
-        style="max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
         onclick={enterTitleEditMode}>{bookmark.title}</a>
 
       <div
         role="button"
         tabindex="0"
-        class="font-jetbrains-mono text-sm text-gray-400"
+        class="font-jetbrains-mono min-w-0 flex-1 text-sm text-gray-400"
         onclick={enterUrlEditMode}
         onkeydown={(e) => {
           if (e.key === "Enter" || e.key === " ") enterUrlEditMode(e);
         }}
         onmouseenter={() => (isUrlHovered = true)}
         onmouseleave={() => (isUrlHovered = false)}>
-        <span
-          class="max-w-1/2 overflow-hidden text-ellipsis whitespace-nowrap"
-          style="max-width:50%;">
+        <span class="block overflow-hidden text-ellipsis whitespace-nowrap">
           {isUrlHovered ? displayUrlOnHover(bookmark.url) : formattedUrl}
         </span>
       </div>
@@ -207,7 +204,10 @@
           : 0};pointer-events:{isExpanded && isOptionHeld ? 'auto' : 'none'}"
         onclick={() => onDeleteBookmark(bookmark.id)} />
 
-      <p class="font-jetbrains-mono text-sm text-gray-400">{formattedDate}</p>
+      <p
+        class="font-sf-pro-text flex-shrink-0 text-sm whitespace-nowrap text-gray-400">
+        {formattedDate}
+      </p>
     {/if}
   </div>
 
