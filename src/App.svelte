@@ -1,8 +1,9 @@
 <script lang="ts">
   import Navbar from "./Navbar.svelte";
-  import { Plus } from "lucide-svelte";
+  import { DownloadCloud, Plus } from "lucide-svelte";
   import Bookmark from "./Bookmark.svelte";
   import Spinner from "./lib/Spinner.svelte";
+  import Palette from "./Palette.svelte";
   let backendAddress = $state("");
 
   $effect(() => {
@@ -133,16 +134,53 @@
   }
 
   async function editBookmark(id: number, title: string, url: string) {
-    const response = await fetch(`${backendAddress}/api/update/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ title, url }),
-    });
-    const data = await response.json();
-    console.log(data);
-    fetchBookmarks();
+    // Store the original bookmark in case we need to restore it
+    const originalBookmark = bookmarks.find((b) => b.id === id);
+    if (!originalBookmark) {
+      console.error("Bookmark not found");
+      return;
+    }
+
+    // Optimistically update the bookmark in the UI immediately
+    bookmarks = bookmarks.map((b) => (b.id === id ? { ...b, title, url } : b));
+
+    try {
+      const response = await fetch(`${backendAddress}/api/update/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title, url }),
+      });
+
+      if (!response.ok) {
+        // If update failed, restore the original bookmark
+        bookmarks = bookmarks.map((b) => (b.id === id ? originalBookmark : b));
+        const errPayload = await response.json().catch(() => null);
+        console.error("Failed to update bookmark", errPayload);
+        throw new Error(errPayload?.message ?? "Failed to update bookmark");
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      // On success, we don't need to do anything since bookmark is already updated
+      // But we might want to refresh to get any additional server-side changes
+      // For now, we'll skip the full refresh to keep the optimistic behavior
+    } catch (error) {
+      // If there was a network error or other exception, restore the original bookmark
+      if (
+        bookmarks.find(
+          (b) =>
+            b.id === id &&
+            (b.title !== originalBookmark.title ||
+              b.url !== originalBookmark.url),
+        )
+      ) {
+        bookmarks = bookmarks.map((b) => (b.id === id ? originalBookmark : b));
+      }
+      console.error("Error updating bookmark:", error);
+    }
   }
 
   let input = $state("");
@@ -242,23 +280,44 @@
       return;
     }
 
+    const originalTags = [...bookmark.tags];
     const updatedTags = [...bookmark.tags, tag];
 
-    const response = await fetch(`${backendAddress}/api/update/${bookmarkId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tags: updatedTags }),
-    });
+    // Optimistically update the bookmark tags in the UI immediately
+    bookmarks = bookmarks.map((b) =>
+      b.id === bookmarkId ? { ...b, tags: updatedTags } : b,
+    );
 
-    if (!response.ok) {
-      console.error("Failed to add tag");
-      return;
+    try {
+      const response = await fetch(
+        `${backendAddress}/api/update/${bookmarkId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tags: updatedTags }),
+        },
+      );
+
+      if (!response.ok) {
+        // If add tag failed, restore the original tags
+        bookmarks = bookmarks.map((b) =>
+          b.id === bookmarkId ? { ...b, tags: originalTags } : b,
+        );
+        console.error("Failed to add tag");
+        return;
+      }
+
+      // On success, refresh tags to get any new tags that might have been created
+      await fetchTags();
+    } catch (error) {
+      // If there was a network error, restore the original tags
+      bookmarks = bookmarks.map((b) =>
+        b.id === bookmarkId ? { ...b, tags: originalTags } : b,
+      );
+      console.error("Error adding tag:", error);
     }
-
-    await fetchBookmarks();
-    await fetchTags();
   }
 
   async function removeTag(bookmarkId: number, tag: string) {
@@ -268,23 +327,44 @@
       return;
     }
 
+    const originalTags = [...bookmark.tags];
     const updatedTags = bookmark.tags.filter((t) => t !== tag);
 
-    const response = await fetch(`${backendAddress}/api/update/${bookmarkId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tags: updatedTags }),
-    });
+    // Optimistically update the bookmark tags in the UI immediately
+    bookmarks = bookmarks.map((b) =>
+      b.id === bookmarkId ? { ...b, tags: updatedTags } : b,
+    );
 
-    if (!response.ok) {
-      console.error("Failed to remove tag");
-      return;
+    try {
+      const response = await fetch(
+        `${backendAddress}/api/update/${bookmarkId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tags: updatedTags }),
+        },
+      );
+
+      if (!response.ok) {
+        // If remove tag failed, restore the original tags
+        bookmarks = bookmarks.map((b) =>
+          b.id === bookmarkId ? { ...b, tags: originalTags } : b,
+        );
+        console.error("Failed to remove tag");
+        return;
+      }
+
+      // On success, refresh tags to update the global tags list
+      await fetchTags();
+    } catch (error) {
+      // If there was a network error, restore the original tags
+      bookmarks = bookmarks.map((b) =>
+        b.id === bookmarkId ? { ...b, tags: originalTags } : b,
+      );
+      console.error("Error removing tag:", error);
     }
-
-    await fetchBookmarks();
-    await fetchTags();
   }
 
   $effect(() => {
@@ -355,17 +435,20 @@
 
   $inspect(parsedTags);
   $inspect(filteredTags);
+
+  let showingPalette = $state(false);
 </script>
 
 <main>
   <Navbar
+    onOptionPress={() => (showingPalette = true)}
     onGroupChange={handleGroupChange}
     onBackendChange={handleBackendChange}
     backendAddress={backendAddress} />
   <div class="mt-24 grid w-full place-items-center">
     <div class="flex w-3xl flex-col gap-4">
       <div
-        class="group flex h-12 items-center gap-2 rounded-lg border border-gray-200 px-3 transition-all focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-gray-700/45">
+        class="group flex h-11 items-center gap-2 rounded-md border border-gray-200 px-3 shadow-xs transition-all focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-gray-700/45">
         <div
           role="button"
           tabindex="0"
@@ -379,8 +462,8 @@
         </div>
         <input
           type="text"
-          placeholder="search or enter a url"
-          class="font-sf-pro-display w-full bg-transparent text-[17px] leading-none font-medium outline-none {isFading
+          placeholder="Insert a link, or just plain text"
+          class="font-geist w-full bg-transparent text-[14px] leading-none font-[450] outline-none {isFading
             ? 'motion-opacity-out-0 motion-duration-100'
             : ''} {isPending ? 'text-gray-500' : ''}"
           bind:value={input}
@@ -407,11 +490,11 @@
         {/each}
       </div>
       <div
-        class="font-geist-mono ml-[2px] flex items-center justify-between border-b border-gray-200 py-3 text-sm text-gray-400">
-        <p class="font-sf-pro-text font-[450]">TITLE</p>
-        <p class="font-sf-pro-text font-[450]">DATE</p>
+        class="font-geist-mono ml-[3px] flex items-center justify-between border-b border-gray-200 py-3 text-sm text-gray-400">
+        <p class="font-sf-pro-text font-[450]">Title</p>
+        <p class="font-sf-pro-text font-[450]">Date</p>
       </div>
-      <div class="ml-[2px] flex flex-col gap-3">
+      <div class="ml-[3px] flex flex-col gap-3">
         {#if filteredBookmarks.length === 0}
           <p class="font-sf-pro-rounded text-left font-medium text-gray-400">
             how empty...

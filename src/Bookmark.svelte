@@ -161,7 +161,7 @@
         bind:value={editableTitle}
         onkeydown={handleEdit}
         onblur={() => (editingState = "none")}
-        class="font-geist w-full truncate bg-transparent font-medium focus:outline-none"
+        class="font-geist w-full truncate bg-transparent text-[15px] font-medium focus:outline-none"
         autofocus />
     {:else if editingState === "url"}
       <!-- svelte-ignore a11y_autofocus -->
@@ -170,12 +170,12 @@
         bind:value={editableUrl}
         onkeydown={handleEdit}
         onblur={() => (editingState = "none")}
-        class="font-jetbrains-mono w-full bg-transparent py-0.5 text-sm text-gray-400 focus:outline-none"
+        class="font-google-sans-code w-full bg-transparent py-0.5 text-sm text-gray-400 focus:outline-none"
         autofocus />
     {:else}
       <a
         href={bookmark.url}
-        class="font-geist truncate font-medium {!isOptionHeld
+        class="font-geist truncate text-[15px] font-medium {!isOptionHeld
           ? 'hover:text-[#c11a3f]'
           : 'cursor-text'}"
         onclick={enterTitleEditMode}>{bookmark.title}</a>
@@ -183,7 +183,7 @@
       <div
         role="button"
         tabindex="0"
-        class="font-jetbrains-mono min-w-0 flex-1 text-sm text-gray-400"
+        class="font-google-sans-code min-w-0 flex-1 text-sm text-gray-400"
         onclick={enterUrlEditMode}
         onkeydown={(e) => {
           if (e.key === "Enter" || e.key === " ") enterUrlEditMode(e);
@@ -205,7 +205,7 @@
         onclick={() => onDeleteBookmark(bookmark.id)} />
 
       <p
-        class="font-sf-pro-text flex-shrink-0 text-sm whitespace-nowrap text-gray-400">
+        class="font-sf-pro-text flex-shrink-0 text-[13.5px] whitespace-nowrap text-gray-400">
         {formattedDate}
       </p>
     {/if}
@@ -223,14 +223,14 @@
           onclick={() => {
             onRemoveTag(bookmark.id, tag);
           }}
-          class="font-jetbrains-mono motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit cursor-pointer rounded-sm bg-[#F1F1F1] px-2 py-1 text-xs font-medium text-[#787879] hover:bg-[#FFEEED] hover:text-[#FF574B]">
+          class="font-google-sans-code motion-opacity-in-0 -motion-translate-y-in-[10%] motion-duration-300 mt-1 w-fit cursor-pointer rounded-sm bg-[#F1F1F1] px-2 py-1 text-xs font-medium text-[#787879] hover:bg-[#FFEEED] hover:text-[#FF574B]">
           {tag.toUpperCase()}
         </button>
       {/each}
       {#if isAddingTag}
         <input
           type="text"
-          class="font-jetbrains-mono mt-1 w-fit py-1 pl-1.5 text-xs font-medium uppercase focus:outline-gray-300"
+          class="font-google-sans-code mt-1 w-fit py-1 pl-1.5 text-xs font-medium uppercase focus:outline-gray-300"
           bind:value={newTagValue}
           bind:this={newTagInputElement}
           onkeydown={(e) => {

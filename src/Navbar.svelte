@@ -3,10 +3,12 @@
     onGroupChange,
     onBackendChange,
     backendAddress,
+    onOptionPress,
   }: {
     onGroupChange: (group: string) => void;
     onBackendChange: (backend: string) => void;
     backendAddress: string;
+    onOptionPress: () => void;
   } = $props();
   import hand from "./assets/peace-hand.svg";
   import arrows from "./assets/arrow-separate-vertical.svg";
@@ -35,12 +37,12 @@
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       let addressToSave = localBackendAddress.trim().replace(/\/+$/, "");
-      if (addressToSave && !/^https?:\/\//i.test(addressToSave)) {
+      if (addressToSave && !/^https?:?\/?\/?/i.test(addressToSave)) {
         addressToSave = `http://${addressToSave}`;
       }
       onBackendChange(addressToSave);
       status = "saved";
-    }, 500);
+    }, 1000);
   }
 
   async function handleExport() {
@@ -98,7 +100,7 @@
           type="text"
           placeholder="https://books.address.com/"
           bind:value={localBackendAddress}
-          class="w-52 rounded-md border border-gray-200 px-2 py-1 text-sm font-medium text-gray-500"
+          class="w-53 rounded-md border border-gray-200 px-2 py-1 text-sm font-medium text-gray-500"
           oninput={handleAddressInput} />
         {#if status === "typing"}
           <Spinner size={16} />
@@ -113,10 +115,11 @@
       </button>
     {/if}
     <button
-      class="flex cursor-pointer items-center gap-2 py-1.5 pr-3 pl-0 text-sm font-medium text-gray-500 transition-opacity {showingOptions
-        ? 'opacity-60'
+      class="flex cursor-pointer items-center gap-2 py-1.5 pr-3 pl-0 text-sm font-medium text-gray-500 transition-all {showingOptions
+        ? 'scale-95 opacity-60 blur-[0.5px]'
         : ''}"
       onclick={() => {
+        onOptionPress();
         showingOptions = !showingOptions;
       }}>
       options
